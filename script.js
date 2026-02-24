@@ -1,523 +1,341 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-:root {
-    --primary: #1f2937;
-    --secondary: #374151;
-    --accent: #ef4444;
-    --success: #10b981;
-    --warning: #f59e0b;
-    --bg-light: #f9fafb;
-    --text-dark: #111827;
-    --border: #e5e7eb;
-    --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
-    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
-    color: var(--text-dark);
-    min-height: 100vh;
-    padding: 20px;
-}
-
-.container {
-    max-width: 1400px;
-    margin: 0 auto;
-}
-
-header {
-    background: white;
-    padding: 30px;
-    border-radius: 12px;
-    box-shadow: var(--shadow);
-    margin-bottom: 30px;
-    border-left: 5px solid var(--accent);
-}
-
-header h1 {
-    font-size: 28px;
-    margin-bottom: 8px;
-    font-weight: 700;
-}
-
-header p {
-    color: #6b7280;
-    font-size: 14px;
-}
-
-.main-grid {
-    display: grid;
-    grid-template-columns: 1fr 350px;
-    gap: 30px;
-    margin-bottom: 30px;
-}
-
-.calendar-wrapper {
-    background: white;
-    border-radius: 12px;
-    box-shadow: var(--shadow);
-    padding: 30px;
-}
-
-.calendar-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
-}
-
-.calendar-nav {
-    display: flex;
-    gap: 15px;
-}
-
-.calendar-nav button {
-    background: var(--primary);
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 600;
-    transition: background 0.3s;
-}
-
-.calendar-nav button:hover {
-    background: var(--secondary);
-}
-
-.month-year {
-    font-size: 20px;
-    font-weight: 700;
-    min-width: 200px;
-    text-align: center;
-}
-
-.weekdays {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 12px;
-    margin-bottom: 12px;
-}
-
-.weekday {
-    text-align: center;
-    font-weight: 600;
-    color: var(--secondary);
-    font-size: 12px;
-    text-transform: uppercase;
-    padding: 10px 0;
-    letter-spacing: 0.5px;
-}
-
-.days {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 12px;
-}
-
-.day {
-    aspect-ratio: auto;
-    min-height: 120px;
-    border: 2px solid var(--border);
-    border-radius: 8px;
-    padding: 10px;
-    cursor: pointer;
-    position: relative;
-    background: white;
-    transition: all 0.2s;
-    font-size: 14px;
-    font-weight: 600;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: flex-start;
-}
-
-.day:hover {
-    border-color: var(--accent);
-    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.1);
-}
-
-.day.other-month {
-    color: #d1d5db;
-    background: #f3f4f6;
-    cursor: default;
-}
-
-.day.other-month:hover {
-    border-color: var(--border);
-    box-shadow: none;
-}
-
-.day.checked {
-    background: var(--success);
-    color: white;
-    border-color: var(--success);
-    position: relative;
-}
-
-.day.checked::after {
-    content: '✓';
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    font-size: 12px;
-}
-
-.day.today {
-    border: 2px solid var(--accent);
-    background: #fef2f2;
-}
-
-.day.today.checked {
-    background: var(--success);
-}
-
-.day-number {
-    font-size: 16px;
-}
-
-.day-content {
-    width: 100%;
-    font-size: 11px;
-    line-height: 1.3;
-    margin-top: 5px;
-}
-
-.day-item {
-    display: flex;
-    align-items: center;
-    margin-bottom: 3px;
-    gap: 4px;
-    padding: 2px 4px;
-    border-radius: 4px;
-    transition: all 0.2s;
-}
-
-.day-item:hover {
-    background: rgba(239, 68, 68, 0.1);
-    transform: scale(1.05);
-}
-
-.day-icon {
-    font-size: 12px;
-    min-width: 14px;
-}
-
-.day-label {
-    color: var(--secondary);
-    font-weight: 500;
-    flex: 1;
-    text-align: left;
-}
-
-.day-value {
-    color: var(--accent);
-    font-weight: 700;
-    font-size: 10px;
-}
-
-.day-check {
-    color: var(--success);
-    font-weight: 700;
-}
-
-.day-actions {
-    display: flex;
-    gap: 4px;
-    opacity: 0;
-    transition: opacity 0.2s;
-}
-
-.day-item:hover .day-actions {
-    opacity: 1;
-}
-
-.day-action-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 12px;
-    padding: 0 2px;
-    transition: all 0.2s;
-}
-
-.day-action-btn:hover {
-    transform: scale(1.3);
-}
-
-.day-action-btn.edit {
-    color: #3b82f6;
-}
-
-.day-action-btn.delete {
-    color: var(--accent);
-}
-
-.sidebar {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.card {
-    background: white;
-    border-radius: 12px;
-    box-shadow: var(--shadow);
-    padding: 20px;
-}
-
-.card h3 {
-    font-size: 14px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 15px;
-    color: var(--secondary);
-}
-
-.check-group {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.check-item {
-    display: flex;
-    align-items: center;
-    padding: 12px;
-    background: var(--bg-light);
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background 0.2s;
-    position: relative;
-}
-
-.check-item:hover {
-    background: #e5e7eb;
-}
-
-.check-item input {
-    accent-color: var(--success);
-    width: 18px;
-    height: 18px;
-    margin-right: 12px;
-    cursor: pointer;
-}
-
-.check-item label {
-    cursor: pointer;
-    flex: 1;
-    font-size: 14px;
-}
-
-.modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 1000;
-    align-items: center;
-    justify-content: center;
-}
-
-.modal.active {
-    display: flex;
-}
-
-.modal-content {
-    background: white;
-    border-radius: 12px;
-    padding: 30px;
-    max-width: 500px;
-    width: 90%;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-}
-
-.modal-content h2 {
-    margin-bottom: 20px;
-    font-size: 20px;
-}
-
-.form-group {
-    margin-bottom: 20px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 600;
-    font-size: 14px;
-}
-
-.form-group input,
-.form-group select,
-.form-group textarea {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    font-size: 14px;
-    font-family: inherit;
-}
-
-.form-group textarea {
-    resize: vertical;
-    min-height: 80px;
-}
-
-.form-actions {
-    display: flex;
-    gap: 12px;
-    margin-top: 25px;
-}
-
-.btn {
-    flex: 1;
-    padding: 12px;
-    border: none;
-    border-radius: 6px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-size: 14px;
-}
-
-.btn-primary {
-    background: var(--accent);
-    color: white;
-}
-
-.btn-primary:hover {
-    background: #dc2626;
-}
-
-.btn-secondary {
-    background: var(--border);
-    color: var(--text-dark);
-}
-
-.btn-secondary:hover {
-    background: #d1d5db;
-}
-
-.stats-section {
-    background: white;
-    border-radius: 12px;
-    box-shadow: var(--shadow);
-    padding: 30px;
-    margin-bottom: 30px;
-}
-
-.stats-section h2 {
-    font-size: 20px;
-    margin-bottom: 25px;
-    font-weight: 700;
-}
-
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 20px;
-}
-
-.stat-card {
-    background: var(--bg-light);
-    padding: 20px;
-    border-radius: 8px;
-    border-left: 4px solid var(--accent);
-}
-
-.stat-label {
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--secondary);
-    margin-bottom: 8px;
-    font-weight: 600;
-}
-
-.stat-value {
-    font-size: 28px;
-    font-weight: 700;
-    color: var(--text-dark);
-}
-
-.stat-percent {
-    font-size: 12px;
-    color: #6b7280;
-    margin-top: 8px;
-}
-
-.export-section {
-    display: flex;
-    gap: 12px;
-    margin-top: 20px;
-}
-
-.btn-export {
-    flex: 1;
-    padding: 12px;
-    background: var(--primary);
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: background 0.2s;
-}
-
-.btn-export:hover {
-    background: var(--secondary);
-}
-
-.empty-state {
-    text-align: center;
-    color: #9ca3af;
-    padding: 30px;
-}
-
-.empty-state p {
-    font-size: 14px;
-}
-
-@media (max-width: 1024px) {
-    .main-grid {
-        grid-template-columns: 1fr;
+const CONTROL_TYPES = {
+    'temp_frigo': 'Température frigo',
+    'temp_cuisine': 'Température cuisine',
+    'huile_friture': 'Changement huile friture',
+    'nettoyage_cuisine': 'Nettoyage cuisine'
+};
+
+let currentDate = new Date();
+let selectedDate = null;
+let editingIndex = null;
+let data = JSON.parse(localStorage.getItem('restaurantData')) || {};
+
+function initCalendar() {
+    renderCalendar();
+    updateStats();
+    updateTodayChecks();
+}
+
+function renderCalendar() {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const prevLastDay = new Date(year, month, 0);
+    
+    const firstDayOfWeek = (firstDay.getDay() + 6) % 7;
+    const totalCells = Math.ceil((firstDayOfWeek + lastDay.getDate()) / 7) * 7;
+    
+    document.getElementById('monthYear').textContent = 
+        firstDay.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+    
+    const calendarHTML = [];
+    let cellCount = 0;
+    
+    // Jours du mois précédent
+    for (let i = firstDayOfWeek - 1; i >= 0; i--) {
+        const day = prevLastDay.getDate() - i;
+        calendarHTML.push(`<div class="day other-month">${day}</div>`);
+        cellCount++;
     }
+    
+    // Jours du mois actuel
+    for (let day = 1; day <= lastDay.getDate(); day++) {
+        const dateStr = formatDate(new Date(year, month, day));
+        const isToday = dateStr === formatDate(new Date());
+        const dayData = data[dateStr];
+        const dayClass = ['day'];
+        
+        if (isToday) dayClass.push('today');
+        
+        let dayHTML = `<div class="day-number">${day}</div>`;
+        
+        if (dayData && dayData.length > 0) {
+            dayHTML += '<div class="day-content">';
+            
+            dayData.forEach((check, index) => {
+                const type = check.type;
+                let itemHTML = '<div class="day-item">';
+                
+                if (type === 'temp_frigo') {
+                    itemHTML += `<span class="day-icon">❄️</span><span class="day-label">Frigo</span><span class="day-value">${check.value}</span>`;
+                } else if (type === 'temp_cuisine') {
+                    itemHTML += `<span class="day-icon">🍳</span><span class="day-label">Cuisine</span><span class="day-value">${check.value}</span>`;
+                } else if (type === 'huile_friture') {
+                    itemHTML += `<span class="day-icon">🫒</span><span class="day-label">Huile</span><span class="day-check">✓</span>`;
+                } else if (type === 'nettoyage_cuisine') {
+                    itemHTML += `<span class="day-icon">🧹</span><span class="day-label">Nettoyage</span><span class="day-check">✓</span>`;
+                }
+                
+                itemHTML += `<div class="day-actions">
+                    <button class="day-action-btn edit" onclick="event.stopPropagation(); editCheck('${dateStr}', ${index})" title="Modifier">✎</button>
+                    <button class="day-action-btn delete" onclick="event.stopPropagation(); quickDeleteCheck('${dateStr}', ${index})" title="Supprimer">🗑</button>
+                </div>`;
+                
+                itemHTML += '</div>';
+                dayHTML += itemHTML;
+            });
+            
+            dayHTML += '</div>';
+        }
+        
+        calendarHTML.push(
+            `<div class="${dayClass.join(' ')}" onclick="selectDay('${dateStr}')">${dayHTML}</div>`
+        );
+        cellCount++;
+    }
+    
+    // Jours du mois suivant
+    for (let day = 1; cellCount < totalCells; day++, cellCount++) {
+        calendarHTML.push(`<div class="day other-month">${day}</div>`);
+    }
+    
+    document.getElementById('calendar').innerHTML = calendarHTML.join('');
+}
 
-    .sidebar {
-        flex-direction: row;
+function updateFormFields() {
+    const checkType = document.getElementById('checkType').value;
+    const valueGroup = document.getElementById('valueGroup');
+    const valueLabel = document.getElementById('valueLabel');
+    
+    if (checkType === 'temp_frigo' || checkType === 'temp_cuisine') {
+        valueGroup.style.display = 'block';
+        valueLabel.textContent = 'Température (°C)';
+    } else {
+        valueGroup.style.display = 'none';
     }
 }
 
-@media (max-width: 768px) {
-    header {
-        padding: 20px;
-    }
+function formatDate(date) {
+    return date.toISOString().split('T')[0];
+}
 
-    header h1 {
-        font-size: 22px;
-    }
+function selectDay(dateStr) {
+    selectedDate = dateStr;
+    editingIndex = null;
+    const date = new Date(dateStr);
+    document.getElementById('modalTitle').textContent = 
+        `Contrôles du ${date.toLocaleDateString('fr-FR')}`;
+    document.getElementById('checkForm').reset();
+    document.getElementById('deleteBtn').style.display = 'none';
+    openModal();
+}
 
-    .calendar-wrapper {
-        padding: 20px;
-    }
+function editCheck(dateStr, index) {
+    selectedDate = dateStr;
+    editingIndex = index;
+    const check = data[dateStr][index];
+    const date = new Date(dateStr);
+    
+    document.getElementById('modalTitle').textContent = 
+        `Modifier contrôle du ${date.toLocaleDateString('fr-FR')}`;
+    document.getElementById('checkType').value = check.type;
+    document.getElementById('checkValue').value = check.value || '';
+    document.getElementById('checkObserver').value = check.observer || '';
+    document.getElementById('checkNotes').value = check.notes || '';
+    document.getElementById('deleteBtn').style.display = 'block';
+    
+    updateFormFields();
+    openModal();
+}
 
-    .sidebar {
-        flex-direction: column;
-    }
+function openModal() {
+    document.getElementById('modal').classList.add('active');
+}
 
-    .stats-grid {
-        grid-template-columns: 1fr;
+function closeModal() {
+    document.getElementById('modal').classList.remove('active');
+    selectedDate = null;
+    editingIndex = null;
+}
+
+function deleteCheck() {
+    if (selectedDate && editingIndex !== null) {
+        if (confirm('Êtes-vous sûr de vouloir supprimer ce contrôle ?')) {
+            data[selectedDate].splice(editingIndex, 1);
+            
+            if (data[selectedDate].length === 0) {
+                delete data[selectedDate];
+            }
+            
+            localStorage.setItem('restaurantData', JSON.stringify(data));
+            
+            renderCalendar();
+            updateStats();
+            updateTodayChecks();
+            closeModal();
+        }
     }
 }
+
+function quickDeleteCheck(dateStr, index) {
+    if (confirm('Supprimer ce contrôle ?')) {
+        data[dateStr].splice(index, 1);
+        
+        if (data[dateStr].length === 0) {
+            delete data[dateStr];
+        }
+        
+        localStorage.setItem('restaurantData', JSON.stringify(data));
+        
+        renderCalendar();
+        updateStats();
+        updateTodayChecks();
+    }
+}
+
+document.getElementById('checkForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    if (!selectedDate) return;
+    
+    const checkType = document.getElementById('checkType').value;
+    let checkValue = document.getElementById('checkValue').value;
+    const checkObserver = document.getElementById('checkObserver').value;
+    const checkNotes = document.getElementById('checkNotes').value;
+    
+    if (!checkType) {
+        alert('Veuillez sélectionner un type de contrôle');
+        return;
+    }
+    
+    // Pour les types sans valeur (huile, nettoyage), mettre une valeur par défaut
+    if (checkType === 'huile_friture' || checkType === 'nettoyage_cuisine') {
+        checkValue = 'OK';
+    }
+    
+    if (!data[selectedDate]) {
+        data[selectedDate] = [];
+    }
+    
+    const newCheck = {
+        type: checkType,
+        value: checkValue,
+        observer: checkObserver,
+        notes: checkNotes,
+        timestamp: new Date().toISOString()
+    };
+    
+    if (editingIndex !== null) {
+        // Modification d'un contrôle existant
+        data[selectedDate][editingIndex] = newCheck;
+    } else {
+        // Ajout d'un nouveau contrôle
+        data[selectedDate].push(newCheck);
+    }
+    
+    localStorage.setItem('restaurantData', JSON.stringify(data));
+    
+    renderCalendar();
+    updateStats();
+    updateTodayChecks();
+    closeModal();
+});
+
+function updateTodayChecks() {
+    const today = formatDate(new Date());
+    const todayChecks = document.getElementById('todayChecks');
+    
+    const doneTypes = data[today]?.map(c => c.type) || [];
+    const allTypes = Object.keys(CONTROL_TYPES);
+    
+    todayChecks.innerHTML = allTypes.map(type => {
+        const isDone = doneTypes.includes(type);
+        return `
+            <div class="check-item" style="${isDone ? 'background: #dcfce7;' : ''}">
+                <input type="checkbox" id="check-${type}" ${isDone ? 'checked' : ''} disabled>
+                <label for="check-${type}">${CONTROL_TYPES[type]}</label>
+            </div>
+        `;
+    }).join('');
+}
+
+function updateStats() {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const stats = {};
+    
+    Object.keys(CONTROL_TYPES).forEach(type => {
+        stats[type] = { done: 0, total: daysInMonth };
+    });
+    
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = formatDate(new Date(year, month, day));
+        if (data[dateStr]) {
+            data[dateStr].forEach(check => {
+                if (stats[check.type]) {
+                    stats[check.type].done++;
+                }
+            });
+        }
+    }
+    
+    const statsGrid = document.getElementById('statsGrid');
+    statsGrid.innerHTML = Object.entries(stats).map(([type, counts]) => {
+        const percent = Math.round((counts.done / counts.total) * 100);
+        return `
+            <div class="stat-card">
+                <div class="stat-label">${CONTROL_TYPES[type]}</div>
+                <div class="stat-value">${counts.done}/${counts.total}</div>
+                <div class="stat-percent">${percent}% complété</div>
+            </div>
+        `;
+    }).join('');
+}
+
+document.getElementById('prevMonth').addEventListener('click', () => {
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    renderCalendar();
+    updateStats();
+});
+
+document.getElementById('nextMonth').addEventListener('click', () => {
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    renderCalendar();
+    updateStats();
+});
+
+document.getElementById('todayBtn').addEventListener('click', () => {
+    currentDate = new Date();
+    renderCalendar();
+    updateStats();
+});
+
+function exportToCSV() {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    
+    let csv = 'Date,Type de contrôle,Valeur,Observateur,Notes\n';
+    
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = formatDate(new Date(year, month, day));
+        if (data[dateStr]) {
+            data[dateStr].forEach(check => {
+                const date = new Date(dateStr).toLocaleDateString('fr-FR');
+                csv += `"${date}","${CONTROL_TYPES[check.type]}","${check.value}","${check.observer}","${check.notes}"\n`;
+            });
+        }
+    }
+    
+    const link = document.createElement('a');
+    link.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+    link.download = `restaurant-checks-${year}-${String(month + 1).padStart(2, '0')}.csv`;
+    link.click();
+}
+
+function printStats() {
+    window.print();
+}
+
+document.getElementById('modal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeModal();
+    }
+});
+
+// Initialisation au chargement de la page
+initCalendar();
