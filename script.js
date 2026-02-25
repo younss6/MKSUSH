@@ -446,12 +446,12 @@ function updateStats() {
     }).join('');
 }
 
-function exportToXLSX() {
+function exportToCSV() {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     
-    const wsData = [['Date', 'Type de contrôle', 'Valeur', 'Heure', 'Observateur', 'Notes']];
+    let csv = 'Date,Type de contrôle,Valeur,Heure,Observateur,Notes\n';
     
     for (let day = 1; day <= daysInMonth; day++) {
         const dateStr = formatDate(new Date(year, month, day));
@@ -461,9 +461,65 @@ function exportToXLSX() {
         if (data[dateStr]) {
             data[dateStr].forEach(check => {
                 const typeInfo = controlTypes[check.type];
-                wsData.push([
+                const typeName = typeInfo?.name || check.type;
+                csv += `"${dateFormatted}","${typeName}","${check.value || ''}","${check.time || ''}","${check.observer || ''}","${check.notes || ''}"\n`;
+            });
+        }
+    }
+    
+    const link = document.createElement('a');
+    link.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+    link.download = `restaurant-checks-${year}-${String(month + 1).padStart(2, '0')}.csv`;
+    link.click();
+}
+
+function setupGoogleSheetsSync() {
+    const webAppUrl = prompt(
+        'Entrez l\'URL de votre Google Apps Script (webhook):\n\nLe format doit être:\nhttps://script.google.com/macros/d/[SCRIPT_ID]/usercontent/do?user_action=sheet'
+    );
+    
+    if (!webAppUrl) return;
+    
+    // Valider l'URL
+    if (!webAppUrl.startsWith('https://script.google.com')) {
+        alert('URL invalide. Doit commencer par https://script.google.com');
+        return;
+    }
+    
+    localStorage.setItem('googleWebAppUrl', webAppUrl);
+    alert('URL Google Sheets enregistrée !\nLes données seront synchronisées automatiquement.');
+    
+    // Envoyer les données actuelles
+    sendToGoogleSheets();
+}
+
+function sendToGoogleSheets() {
+    const webAppUrl = localStorage.getItem('googleWebAppUrl');
+    
+    if (!webAppUrl) {
+        alert('Veuillez d\'abord configurer votre Google Sheet via ⚙️ Paramètres');
+        return;
+    }
+    
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    
+    const rows = [];
+    
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = formatDate(new Date(year, month, day));
+        const dateObj = new Date(dateStr);
+        const dateFormatted = dateObj.toLocaleDateString('fr-FR');
+        
+        if (data[dateStr]) {
+            data[dateStr].forEach(check => {
+                const typeInfo = controlTypes[check.type];
+                const typeName = typeInfo?.name || check.type;
+                
+                rows.push([
                     dateFormatted,
-                    typeInfo?.name || check.type,
+                    typeName,
                     check.value || '',
                     check.time || '',
                     check.observer || '',
@@ -473,27 +529,29 @@ function exportToXLSX() {
         }
     }
     
-    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    // Préparer les données
+    const payload = {
+        action: 'addData',
+        data: rows,
+        month: `${year}-${String(month + 1).padStart(2, '0')}`
+    };
     
-    // Ajuster la largeur des colonnes
-    const colWidths = [15, 25, 15, 12, 15, 25];
-    ws['!cols'] = colWidths.map(width => ({ wch: width }));
-    
-    // Style du header (optionnel - nécessite SheetJS Pro)
-    const wscols = [
-        { wch: 15 },
-        { wch: 25 },
-        { wch: 15 },
-        { wch: 12 },
-        { wch: 15 },
-        { wch: 25 }
-    ];
-    ws['!cols'] = wscols;
-    
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, `Contrôles ${year}-${String(month + 1).padStart(2, '0')}`);
-    
-    XLSX.writeFile(wb, `restaurant-checks-${year}-${String(month + 1).padStart(2, '0')}.xlsx`);
+    // Envoyer via fetch (CORS)
+    fetch(webAppUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(() => {
+        alert('Données envoyées à Google Sheets ! 🎉');
+    })
+    .catch(error => {
+        console.error('Erreur lors de l\'envoi:', error);
+        alert('Erreur lors de l\'envoi. Vérifiez votre URL.');
+    });
 }
 
 function printStats() {
