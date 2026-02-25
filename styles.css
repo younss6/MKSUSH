@@ -704,7 +704,7 @@ header p {
 
 @media (min-width: 768px) {
     .export-section {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(4, 1fr);
         gap: 12px;
         margin-top: 20px;
     }
@@ -719,7 +719,7 @@ header p {
     cursor: pointer;
     font-weight: 600;
     transition: background 0.2s;
-    font-size: clamp(12px, 2vw, 14px);
+    font-size: clamp(11px, 1.8vw, 13px);
 }
 
 .btn-export:hover {
