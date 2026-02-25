@@ -532,11 +532,11 @@ function sendToGoogleSheets() {
     }
     
     if (totalControls === 0) {
-        alert('Aucun contrôle à envoyer pour ce mois !');
+        alert('❌ Aucun contrôle à envoyer pour ce mois !');
         return;
     }
     
-    console.log(`Envoi de ${totalControls} contrôles vers Google Sheets...`);
+    console.log(`📤 Envoi de ${totalControls} contrôles vers Google Sheets...`);
     console.log('URL:', webAppUrl);
     console.log('Données:', rows);
     
@@ -557,13 +557,13 @@ function sendToGoogleSheets() {
         },
         body: JSON.stringify(payload)
     })
-    .then(() => {
-        console.log('✅ Envoi réussi !');
-        alert(`✅ ${totalControls} contrôle(s) envoyé(s) à Google Sheets !\n\nOuvrez votre Google Sheet et rechargez la page pour voir les données.`);
+    .then(response => {
+        console.log('✅ Réponse reçue du serveur');
+        alert(`✅ ${totalControls} contrôle(s) envoyé(s) !\n\n📌 IMPORTANT:\n1. Ouvrez votre Google Sheet\n2. Rechargez la page (F5)\n3. Les données devraient apparaître\n\nSi rien n'apparaît:\n- Vérifiez que la feuille s\'appelle "Contrôles"\n- Vérifiez l\'URL du webhook\n- Ouvrez la console (F12) pour plus de détails`);
     })
     .catch(error => {
         console.error('❌ Erreur lors de l\'envoi:', error);
-        alert('❌ Erreur lors de l\'envoi.\n\nVérifiez :\n1. L\'URL du webhook\n2. Que la feuille s\'appelle "Contrôles"\n3. Que vous avez des contrôles à envoyer');
+        alert('⚠️ Erreur lors de l\'envoi (mais les données ont peut-être été reçues).\n\nOuvrez votre Google Sheet et rechargez la page (F5).');
     });
 }
 
