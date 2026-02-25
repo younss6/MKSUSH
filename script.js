@@ -1,19 +1,56 @@
-const CONTROL_TYPES = {
-    'temp_frigo': 'Température frigo',
-    'temp_cuisine': 'Température cuisine',
-    'huile_friture': 'Changement huile friture',
-    'nettoyage_cuisine': 'Nettoyage cuisine'
+// Configuration des types de contrôle (stockée en localStorage)
+const DEFAULT_CONTROL_TYPES = {
+    'temp_frigo': { name: 'Température frigo', icon: '❄️', valueType: 'temperature' },
+    'temp_cuisine': { name: 'Température cuisine', icon: '🍳', valueType: 'temperature' },
+    'huile_friture': { name: 'Changement huile friture', icon: '🫒', valueType: 'boolean' },
+    'nettoyage_cuisine': { name: 'Nettoyage cuisine', icon: '🧹', valueType: 'boolean' }
 };
 
+let controlTypes = JSON.parse(localStorage.getItem('controlTypes')) || DEFAULT_CONTROL_TYPES;
 let currentDate = new Date();
 let selectedDate = null;
 let editingIndex = null;
 let data = JSON.parse(localStorage.getItem('restaurantData')) || {};
 
-function initCalendar() {
+function initApp() {
     renderCalendar();
     updateStats();
     updateTodayChecks();
+    updateLegend();
+    populateControlTypeSelect();
+    setupEventListeners();
+}
+
+function setupEventListeners() {
+    document.getElementById('prevMonth').addEventListener('click', () => {
+        currentDate.setMonth(currentDate.getMonth() - 1);
+        renderCalendar();
+        updateStats();
+    });
+
+    document.getElementById('nextMonth').addEventListener('click', () => {
+        currentDate.setMonth(currentDate.getMonth() + 1);
+        renderCalendar();
+        updateStats();
+    });
+
+    document.getElementById('todayBtn').addEventListener('click', () => {
+        currentDate = new Date();
+        renderCalendar();
+        updateStats();
+    });
+
+    document.getElementById('settingsBtn').addEventListener('click', openSettings);
+
+    document.getElementById('checkForm').addEventListener('submit', handleFormSubmit);
+
+    document.getElementById('modal').addEventListener('click', function(e) {
+        if (e.target === this) closeModal();
+    });
+
+    document.getElementById('settingsModal').addEventListener('click', function(e) {
+        if (e.target === this) closeSettings();
+    });
 }
 
 function renderCalendar() {
@@ -55,17 +92,19 @@ function renderCalendar() {
             dayHTML += '<div class="day-content">';
             
             dayData.forEach((check, index) => {
-                const type = check.type;
-                let itemHTML = '<div class="day-item">';
+                const type = controlTypes[check.type];
+                if (!type) return;
                 
-                if (type === 'temp_frigo') {
-                    itemHTML += `<span class="day-icon">❄️</span><span class="day-label">Frigo</span><span class="day-value">${check.value}</span>`;
-                } else if (type === 'temp_cuisine') {
-                    itemHTML += `<span class="day-icon">🍳</span><span class="day-label">Cuisine</span><span class="day-value">${check.value}</span>`;
-                } else if (type === 'huile_friture') {
-                    itemHTML += `<span class="day-icon">🫒</span><span class="day-label">Huile</span><span class="day-check">✓</span>`;
-                } else if (type === 'nettoyage_cuisine') {
-                    itemHTML += `<span class="day-icon">🧹</span><span class="day-label">Nettoyage</span><span class="day-check">✓</span>`;
+                let itemHTML = '<div class="day-item">';
+                itemHTML += `<span class="day-icon">${type.icon}</span>`;
+                itemHTML += `<span class="day-label">${type.name}</span>`;
+                
+                if (type.valueType === 'temperature') {
+                    itemHTML += `<span class="day-value">${check.value}</span>`;
+                } else if (type.valueType === 'boolean') {
+                    itemHTML += `<span class="day-check">✓</span>`;
+                } else {
+                    itemHTML += `<span class="day-value">${check.value}</span>`;
                 }
                 
                 itemHTML += `<div class="day-actions">
@@ -94,19 +133,6 @@ function renderCalendar() {
     document.getElementById('calendar').innerHTML = calendarHTML.join('');
 }
 
-function updateFormFields() {
-    const checkType = document.getElementById('checkType').value;
-    const valueGroup = document.getElementById('valueGroup');
-    const valueLabel = document.getElementById('valueLabel');
-    
-    if (checkType === 'temp_frigo' || checkType === 'temp_cuisine') {
-        valueGroup.style.display = 'block';
-        valueLabel.textContent = 'Température (°C)';
-    } else {
-        valueGroup.style.display = 'none';
-    }
-}
-
 function formatDate(date) {
     return date.toISOString().split('T')[0];
 }
@@ -119,6 +145,7 @@ function selectDay(dateStr) {
         `Contrôles du ${date.toLocaleDateString('fr-FR')}`;
     document.getElementById('checkForm').reset();
     document.getElementById('deleteBtn').style.display = 'none';
+    setCurrentTime();
     openModal();
 }
 
@@ -133,11 +160,62 @@ function editCheck(dateStr, index) {
     document.getElementById('checkType').value = check.type;
     document.getElementById('checkValue').value = check.value || '';
     document.getElementById('checkObserver').value = check.observer || '';
+    document.getElementById('checkTime').value = check.time || '';
     document.getElementById('checkNotes').value = check.notes || '';
     document.getElementById('deleteBtn').style.display = 'block';
     
     updateFormFields();
     openModal();
+}
+
+function updateFormFields() {
+    const checkType = document.getElementById('checkType').value;
+    const valueGroup = document.getElementById('valueGroup');
+    const valueLabel = document.getElementById('valueLabel');
+    const checkValue = document.getElementById('checkValue');
+    
+    if (!checkType || !controlTypes[checkType]) {
+        valueGroup.style.display = 'none';
+        return;
+    }
+    
+    const type = controlTypes[checkType];
+    
+    if (type.valueType === 'temperature') {
+        valueGroup.style.display = 'block';
+        valueLabel.textContent = 'Température (°C)';
+        checkValue.placeholder = 'Ex: 4°C';
+    } else if (type.valueType === 'boolean') {
+        valueGroup.style.display = 'none';
+    } else {
+        valueGroup.style.display = 'block';
+        valueLabel.textContent = 'Valeur';
+        checkValue.placeholder = 'Entrez une valeur...';
+    }
+}
+
+function populateControlTypeSelect() {
+    const select = document.getElementById('checkType');
+    const options = ['<option value="">Sélectionner...</option>'];
+    
+    Object.entries(controlTypes).forEach(([key, type]) => {
+        options.push(`<option value="${key}">${type.icon} ${type.name}</option>`);
+    });
+    
+    select.innerHTML = options.join('');
+}
+
+function updateLegend() {
+    const legend = document.getElementById('legend');
+    const items = Object.entries(controlTypes).map(([key, type]) => {
+        let description = type.name;
+        if (type.valueType === 'boolean') {
+            description += ' (✓ = effectué)';
+        }
+        return `<div><span>${type.icon} ${description}</span></div>`;
+    });
+    
+    legend.innerHTML = items.join('');
 }
 
 function openModal() {
@@ -150,6 +228,136 @@ function closeModal() {
     editingIndex = null;
 }
 
+function openSettings() {
+    displayExistingTypes();
+    document.getElementById('settingsModal').classList.add('active');
+}
+
+function closeSettings() {
+    document.getElementById('settingsModal').classList.remove('active');
+}
+
+function displayExistingTypes() {
+    const container = document.getElementById('existingTypes');
+    const items = Object.entries(controlTypes).map(([key, type]) => {
+        const valueTypeLabel = {
+            'temperature': 'Température',
+            'boolean': 'Oui/Non',
+            'text': 'Texte'
+        }[type.valueType] || type.valueType;
+        
+        return `
+            <div class="existing-type">
+                <div class="type-info">
+                    <div class="type-icon">${type.icon}</div>
+                    <div class="type-details">
+                        <div class="type-name">${type.name}</div>
+                        <div class="type-value">${valueTypeLabel}</div>
+                    </div>
+                </div>
+                <div class="type-actions">
+                    <button class="type-delete-btn" onclick="deleteControlType('${key}')">Supprimer</button>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = items.join('');
+}
+
+function addNewControlType() {
+    const name = document.getElementById('newTypeName').value.trim();
+    const icon = document.getElementById('newTypeIcon').value.trim();
+    const valueType = document.getElementById('newTypeValue').value;
+    
+    if (!name || !icon) {
+        alert('Veuillez remplir le nom et l\'icône');
+        return;
+    }
+    
+    const id = name.toLowerCase().replace(/\s+/g, '_');
+    
+    controlTypes[id] = {
+        name: name,
+        icon: icon,
+        valueType: valueType
+    };
+    
+    localStorage.setItem('controlTypes', JSON.stringify(controlTypes));
+    
+    document.getElementById('newTypeName').value = '';
+    document.getElementById('newTypeIcon').value = '';
+    
+    populateControlTypeSelect();
+    updateLegend();
+    displayExistingTypes();
+    
+    alert('Type de contrôle ajouté !');
+}
+
+function deleteControlType(id) {
+    if (Object.keys(controlTypes).length <= 1) {
+        alert('Vous devez avoir au moins un type de contrôle');
+        return;
+    }
+    
+    if (confirm(`Êtes-vous sûr de vouloir supprimer "${controlTypes[id].name}" ?`)) {
+        delete controlTypes[id];
+        localStorage.setItem('controlTypes', JSON.stringify(controlTypes));
+        populateControlTypeSelect();
+        updateLegend();
+        displayExistingTypes();
+    }
+}
+
+function handleFormSubmit(e) {
+    e.preventDefault();
+    
+    if (!selectedDate) return;
+    
+    const checkType = document.getElementById('checkType').value;
+    let checkValue = document.getElementById('checkValue').value;
+    const checkObserver = document.getElementById('checkObserver').value;
+    const checkTime = document.getElementById('checkTime').value;
+    const checkNotes = document.getElementById('checkNotes').value;
+    
+    if (!checkType) {
+        alert('Veuillez sélectionner un type de contrôle');
+        return;
+    }
+    
+    const type = controlTypes[checkType];
+    if (type.valueType === 'boolean') {
+        checkValue = 'OK';
+    }
+    
+    if (!data[selectedDate]) {
+        data[selectedDate] = [];
+    }
+    
+    const newCheck = {
+        type: checkType,
+        value: checkValue,
+        observer: checkObserver,
+        time: checkTime,
+        notes: checkNotes,
+        timestamp: new Date().toISOString()
+    };
+    
+    if (editingIndex !== null) {
+        data[selectedDate][editingIndex] = newCheck;
+    } else {
+        data[selectedDate].push(newCheck);
+    }
+    
+    localStorage.setItem('restaurantData', JSON.stringify(data));
+    
+    renderCalendar();
+    updateStats();
+    updateTodayChecks();
+    closeModal();
+}
+
 function deleteCheck() {
     if (selectedDate && editingIndex !== null) {
         if (confirm('Êtes-vous sûr de vouloir supprimer ce contrôle ?')) {
@@ -160,7 +368,6 @@ function deleteCheck() {
             }
             
             localStorage.setItem('restaurantData', JSON.stringify(data));
-            
             renderCalendar();
             updateStats();
             updateTodayChecks();
@@ -178,74 +385,26 @@ function quickDeleteCheck(dateStr, index) {
         }
         
         localStorage.setItem('restaurantData', JSON.stringify(data));
-        
         renderCalendar();
         updateStats();
         updateTodayChecks();
     }
 }
 
-document.getElementById('checkForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    if (!selectedDate) return;
-    
-    const checkType = document.getElementById('checkType').value;
-    let checkValue = document.getElementById('checkValue').value;
-    const checkObserver = document.getElementById('checkObserver').value;
-    const checkNotes = document.getElementById('checkNotes').value;
-    
-    if (!checkType) {
-        alert('Veuillez sélectionner un type de contrôle');
-        return;
-    }
-    
-    // Pour les types sans valeur (huile, nettoyage), mettre une valeur par défaut
-    if (checkType === 'huile_friture' || checkType === 'nettoyage_cuisine') {
-        checkValue = 'OK';
-    }
-    
-    if (!data[selectedDate]) {
-        data[selectedDate] = [];
-    }
-    
-    const newCheck = {
-        type: checkType,
-        value: checkValue,
-        observer: checkObserver,
-        notes: checkNotes,
-        timestamp: new Date().toISOString()
-    };
-    
-    if (editingIndex !== null) {
-        // Modification d'un contrôle existant
-        data[selectedDate][editingIndex] = newCheck;
-    } else {
-        // Ajout d'un nouveau contrôle
-        data[selectedDate].push(newCheck);
-    }
-    
-    localStorage.setItem('restaurantData', JSON.stringify(data));
-    
-    renderCalendar();
-    updateStats();
-    updateTodayChecks();
-    closeModal();
-});
-
 function updateTodayChecks() {
     const today = formatDate(new Date());
     const todayChecks = document.getElementById('todayChecks');
     
     const doneTypes = data[today]?.map(c => c.type) || [];
-    const allTypes = Object.keys(CONTROL_TYPES);
+    const allTypes = Object.keys(controlTypes);
     
     todayChecks.innerHTML = allTypes.map(type => {
         const isDone = doneTypes.includes(type);
+        const typeInfo = controlTypes[type];
         return `
             <div class="check-item" style="${isDone ? 'background: #dcfce7;' : ''}">
                 <input type="checkbox" id="check-${type}" ${isDone ? 'checked' : ''} disabled>
-                <label for="check-${type}">${CONTROL_TYPES[type]}</label>
+                <label for="check-${type}">${typeInfo.icon} ${typeInfo.name}</label>
             </div>
         `;
     }).join('');
@@ -258,7 +417,7 @@ function updateStats() {
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const stats = {};
     
-    Object.keys(CONTROL_TYPES).forEach(type => {
+    Object.keys(controlTypes).forEach(type => {
         stats[type] = { done: 0, total: daysInMonth };
     });
     
@@ -276,9 +435,10 @@ function updateStats() {
     const statsGrid = document.getElementById('statsGrid');
     statsGrid.innerHTML = Object.entries(stats).map(([type, counts]) => {
         const percent = Math.round((counts.done / counts.total) * 100);
+        const typeInfo = controlTypes[type];
         return `
             <div class="stat-card">
-                <div class="stat-label">${CONTROL_TYPES[type]}</div>
+                <div class="stat-label">${typeInfo.icon} ${typeInfo.name}</div>
                 <div class="stat-value">${counts.done}/${counts.total}</div>
                 <div class="stat-percent">${percent}% complété</div>
             </div>
@@ -286,56 +446,66 @@ function updateStats() {
     }).join('');
 }
 
-document.getElementById('prevMonth').addEventListener('click', () => {
-    currentDate.setMonth(currentDate.getMonth() - 1);
-    renderCalendar();
-    updateStats();
-});
-
-document.getElementById('nextMonth').addEventListener('click', () => {
-    currentDate.setMonth(currentDate.getMonth() + 1);
-    renderCalendar();
-    updateStats();
-});
-
-document.getElementById('todayBtn').addEventListener('click', () => {
-    currentDate = new Date();
-    renderCalendar();
-    updateStats();
-});
-
-function exportToCSV() {
+function exportToXLSX() {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     
-    let csv = 'Date,Type de contrôle,Valeur,Observateur,Notes\n';
+    const wsData = [['Date', 'Type de contrôle', 'Valeur', 'Heure', 'Observateur', 'Notes']];
     
     for (let day = 1; day <= daysInMonth; day++) {
         const dateStr = formatDate(new Date(year, month, day));
+        const dateObj = new Date(dateStr);
+        const dateFormatted = dateObj.toLocaleDateString('fr-FR');
+        
         if (data[dateStr]) {
             data[dateStr].forEach(check => {
-                const date = new Date(dateStr).toLocaleDateString('fr-FR');
-                csv += `"${date}","${CONTROL_TYPES[check.type]}","${check.value}","${check.observer}","${check.notes}"\n`;
+                const typeInfo = controlTypes[check.type];
+                wsData.push([
+                    dateFormatted,
+                    typeInfo?.name || check.type,
+                    check.value || '',
+                    check.time || '',
+                    check.observer || '',
+                    check.notes || ''
+                ]);
             });
         }
     }
     
-    const link = document.createElement('a');
-    link.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
-    link.download = `restaurant-checks-${year}-${String(month + 1).padStart(2, '0')}.csv`;
-    link.click();
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    
+    // Ajuster la largeur des colonnes
+    const colWidths = [15, 25, 15, 12, 15, 25];
+    ws['!cols'] = colWidths.map(width => ({ wch: width }));
+    
+    // Style du header (optionnel - nécessite SheetJS Pro)
+    const wscols = [
+        { wch: 15 },
+        { wch: 25 },
+        { wch: 15 },
+        { wch: 12 },
+        { wch: 15 },
+        { wch: 25 }
+    ];
+    ws['!cols'] = wscols;
+    
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, `Contrôles ${year}-${String(month + 1).padStart(2, '0')}`);
+    
+    XLSX.writeFile(wb, `restaurant-checks-${year}-${String(month + 1).padStart(2, '0')}.xlsx`);
 }
 
 function printStats() {
     window.print();
 }
 
-document.getElementById('modal').addEventListener('click', function(e) {
-    if (e.target === this) {
-        closeModal();
-    }
-});
+function setCurrentTime() {
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    document.getElementById('checkTime').value = `${hours}:${minutes}`;
+}
 
-// Initialisation au chargement de la page
-initCalendar();
+// Initialisation
+document.addEventListener('DOMContentLoaded', initApp);
