@@ -207,12 +207,12 @@ function populateControlTypeSelect() {
 
 function updateLegend() {
     const legend = document.getElementById('legend');
-    const items = Object.entries(controlTypes).map(([key, type]) => {
+    const items = Object.entries(controlTypes).map(([key, type], index) => {
         let description = type.name;
         if (type.valueType === 'boolean') {
             description += ' (✓ = effectué)';
         }
-        return `<div><span>${type.icon} ${description}</span></div>`;
+        return `<div style="margin-bottom: 10px;"><span>${type.icon} ${description}</span></div>`;
     });
     
     legend.innerHTML = items.join('');
@@ -497,7 +497,7 @@ function sendToGoogleSheets() {
     const webAppUrl = localStorage.getItem('googleWebAppUrl');
     
     if (!webAppUrl) {
-        alert('Veuillez d\'abord configurer votre Google Sheet via ⚙️ Paramètres');
+        alert('Veuillez d\'abord configurer votre Google Sheet via 📊 Google Sheets');
         return;
     }
     
@@ -506,6 +506,7 @@ function sendToGoogleSheets() {
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     
     const rows = [];
+    let totalControls = 0;
     
     for (let day = 1; day <= daysInMonth; day++) {
         const dateStr = formatDate(new Date(year, month, day));
@@ -525,18 +526,29 @@ function sendToGoogleSheets() {
                     check.observer || '',
                     check.notes || ''
                 ]);
+                totalControls++;
             });
         }
     }
+    
+    if (totalControls === 0) {
+        alert('Aucun contrôle à envoyer pour ce mois !');
+        return;
+    }
+    
+    console.log(`Envoi de ${totalControls} contrôles vers Google Sheets...`);
+    console.log('URL:', webAppUrl);
+    console.log('Données:', rows);
     
     // Préparer les données
     const payload = {
         action: 'addData',
         data: rows,
-        month: `${year}-${String(month + 1).padStart(2, '0')}`
+        month: `${year}-${String(month + 1).padStart(2, '0')}`,
+        timestamp: new Date().toISOString()
     };
     
-    // Envoyer via fetch (CORS)
+    // Envoyer via fetch avec gestion complète des erreurs
     fetch(webAppUrl, {
         method: 'POST',
         mode: 'no-cors',
@@ -546,11 +558,12 @@ function sendToGoogleSheets() {
         body: JSON.stringify(payload)
     })
     .then(() => {
-        alert('Données envoyées à Google Sheets ! 🎉');
+        console.log('✅ Envoi réussi !');
+        alert(`✅ ${totalControls} contrôle(s) envoyé(s) à Google Sheets !\n\nOuvrez votre Google Sheet et rechargez la page pour voir les données.`);
     })
     .catch(error => {
-        console.error('Erreur lors de l\'envoi:', error);
-        alert('Erreur lors de l\'envoi. Vérifiez votre URL.');
+        console.error('❌ Erreur lors de l\'envoi:', error);
+        alert('❌ Erreur lors de l\'envoi.\n\nVérifiez :\n1. L\'URL du webhook\n2. Que la feuille s\'appelle "Contrôles"\n3. Que vous avez des contrôles à envoyer');
     });
 }
 
