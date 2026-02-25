@@ -38,15 +38,37 @@ header {
     border-left: 5px solid var(--accent);
 }
 
+.header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
 header h1 {
     font-size: clamp(24px, 5vw, 28px);
-    margin-bottom: 8px;
     font-weight: 700;
 }
 
 header p {
     color: #6b7280;
     font-size: clamp(12px, 2vw, 14px);
+}
+
+.settings-btn {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 20px;
+    transition: all 0.2s;
+}
+
+.settings-btn:hover {
+    background: var(--secondary);
+    transform: rotate(20deg);
 }
 
 .main-grid {
@@ -215,28 +237,9 @@ header p {
     box-shadow: none;
 }
 
-.day.checked {
-    background: var(--success);
-    color: white;
-    border-color: var(--success);
-    position: relative;
-}
-
-.day.checked::after {
-    content: '✓';
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    font-size: 12px;
-}
-
 .day.today {
     border: 2px solid var(--accent);
     background: #fef2f2;
-}
-
-.day.today.checked {
-    background: var(--success);
 }
 
 .day-number {
@@ -416,6 +419,15 @@ header p {
     font-size: clamp(12px, 2vw, 14px);
 }
 
+#legend {
+    font-size: 13px;
+    line-height: 1.8;
+}
+
+#legend > div {
+    margin-bottom: 10px;
+}
+
 .modal {
     display: none;
     position: fixed;
@@ -454,6 +466,88 @@ header p {
 .modal-content h2 {
     margin-bottom: 15px;
     font-size: clamp(18px, 4vw, 20px);
+}
+
+.modal-content h3 {
+    margin-top: 20px;
+    margin-bottom: 15px;
+    font-size: clamp(14px, 3vw, 16px);
+    color: var(--secondary);
+}
+
+.settings-modal {
+    max-width: 600px;
+}
+
+.settings-section {
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+}
+
+.settings-section:last-child {
+    border-bottom: none;
+}
+
+#existingTypes {
+    display: grid;
+    gap: 12px;
+}
+
+.existing-type {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px;
+    background: var(--bg-light);
+    border-radius: 6px;
+    border-left: 3px solid var(--accent);
+}
+
+.type-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+}
+
+.type-icon {
+    font-size: 20px;
+}
+
+.type-details {
+    flex: 1;
+}
+
+.type-name {
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.type-value {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.type-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.type-delete-btn {
+    background: #fee2e2;
+    color: var(--accent);
+    border: none;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.type-delete-btn:hover {
+    background: #fecaca;
 }
 
 .form-group {
@@ -511,6 +605,13 @@ header p {
 .btn-primary {
     background: var(--accent);
     color: white;
+    grid-column: span 2;
+}
+
+@media (min-width: 768px) {
+    .btn-primary {
+        grid-column: span 1;
+    }
 }
 
 .btn-primary:hover {
@@ -644,7 +745,7 @@ header p {
         page-break-inside: avoid;
     }
 
-    .day-actions, .modal, .calendar-nav {
+    .day-actions, .modal, .calendar-nav, .settings-btn {
         display: none !important;
     }
 }
